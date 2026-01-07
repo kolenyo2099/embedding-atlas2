@@ -41,6 +41,8 @@
     onRowClick,
     highlightedRows,
     highlightHoveredRow,
+    editableColumns,
+    onCellEdit,
   }: TableProps = $props();
 
   ConfigContext.initialize();
@@ -182,6 +184,22 @@
       config.highlightHoveredRow = highlightHoveredRow;
     } else {
       config.highlightHoveredRow = false;
+    }
+  });
+
+  $effect(() => {
+    if (editableColumns != null) {
+      config.editableColumns = editableColumns;
+    } else {
+      config.editableColumns = null;
+    }
+  });
+
+  $effect(() => {
+    if (onCellEdit != null) {
+      config.onCellEdit = onCellEdit;
+    } else {
+      config.onCellEdit = null;
     }
   });
 

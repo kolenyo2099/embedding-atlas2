@@ -24,6 +24,8 @@ export interface Config {
   showRowNumber: boolean | null;
   onShowRowNumberChange: ((showRowNumber: boolean) => void) | null;
   highlightHoveredRow: boolean;
+  editableColumns: string[] | null;
+  onCellEdit: ((rowId: string, column: string, value: unknown) => void) | null;
 
   get rowHeight(): number;
 
@@ -78,6 +80,8 @@ export const DEFAULT_CONFIG = {
   showRowNumber: true,
   onShowRowNumberChange: () => {},
   highlightHoveredRow: false,
+  editableColumns: null,
+  onCellEdit: null,
 
   get rowHeight() {
     return this.textMaxLines * this.lineHeight + this.betweenRowPadding;

@@ -177,7 +177,12 @@
     >
       {#if stage == "load-data"}
         <div class="w-[40rem] flex flex-col gap-2">
-          <FileUpload extensions={[".csv", ".parquet", ".json", ".jsonl"]} multiple={true} onUpload={loadData} />
+          <FileUpload
+            extensions={[".csv", ".parquet", ".json", ".jsonl"]}
+            multiple={true}
+            allowDirectories={true}
+            onUpload={loadData}
+          />
           <div class="w-full text-center text-slate-400 dark:text-slate-500">&mdash; or &mdash;</div>
           <URLInput onConfirm={(url) => loadData([{ url: url }])} />
           {#if hashParams.settings != undefined || hashParams.state != undefined}

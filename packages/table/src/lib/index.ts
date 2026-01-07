@@ -120,6 +120,12 @@ export interface TableProps {
 
   /** Whether to highlight the hovered row. */
   highlightHoveredRow?: boolean | null;
+
+  /** Columns that can be edited inline. */
+  editableColumns?: string[] | null;
+
+  /** Callback when a cell value is edited. */
+  onCellEdit?: ((rowId: string, column: string, value: unknown) => void) | null;
 }
 
 export class Table {
