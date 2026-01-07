@@ -29,8 +29,13 @@
 
   let height: number = $state(0);
   let contentHeight = $state(0);
+  let editing = $state(false);
+  let draftValue = $state("");
 
   let clamped = $derived(contentHeight > height);
+  let isEditable = $derived(
+    !customCellsConfig[col] && (config.editableColumns?.includes(col) ?? false),
+  );
 
   const content: string | null = model.getContent({ row, col });
   const type: JSType = schema.dataType[col] ?? "string";
@@ -53,6 +58,28 @@
     }
     return false;
   }
+
+  function startEditing() {
+    if (!isEditable) {
+      return;
+    }
+    draftValue = content == null ? "" : String(content);
+    editing = true;
+  }
+
+  function cancelEditing() {
+    editing = false;
+  }
+
+  function commitEditing() {
+    editing = false;
+    let value: unknown = draftValue;
+    if (type === "number") {
+      let parsed = Number(draftValue);
+      value = Number.isNaN(parsed) ? draftValue : parsed;
+    }
+    controller.commitCellEdit(row, col, value);
+  }
 </script>
 
 <div
@@ -60,25 +87,41 @@
   bind:clientHeight={height}
   style:--lineHeight={config.lineHeight + "px"}
   style:--num-lines={config.textMaxLines}
+  ondblclick={startEditing}
 >
-  {#if customCellsConfig[col]}
-    <CustomCellContents row={row} col={col} customCell={customCellsConfig[col]} bind:height={contentHeight} />
-  {:else if type === "string"}
-    {#if content && isLink(content)}
-      <LinkContent url={content} bind:height={contentHeight} />
+  {#if editing}
+    <input
+      class="w-full h-full border border-slate-300 dark:border-slate-600 rounded-sm px-2 py-1 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+      bind:value={draftValue}
+      onkeydown={(event) => {
+        if (event.key === "Enter") {
+          commitEditing();
+        } else if (event.key === "Escape") {
+          cancelEditing();
+        }
+      }}
+      onblur={commitEditing}
+    />
+  {:else}
+    {#if customCellsConfig[col]}
+      <CustomCellContents row={row} col={col} customCell={customCellsConfig[col]} bind:height={contentHeight} />
+    {:else if type === "string"}
+      {#if content && isLink(content)}
+        <LinkContent url={content} bind:height={contentHeight} />
+      {:else}
+        <TextContent text={content} bind:height={contentHeight} clamped={clamped} parentHeight={height} />
+      {/if}
+    {:else if type === "number"}
+      {#if sqlType === "BIGINT"}
+        <BigIntContent bigint={BigInt((content as string) ?? "")} bind:height={contentHeight} />
+      {:else}
+        <NumberContent number={content as number | null} bind:height={contentHeight} />
+      {/if}
+    {:else if isImage(content)}
+      <ImageContent image={content} bind:height={contentHeight} />
     {:else}
       <TextContent text={content} bind:height={contentHeight} clamped={clamped} parentHeight={height} />
     {/if}
-  {:else if type === "number"}
-    {#if sqlType === "BIGINT"}
-      <BigIntContent bigint={BigInt((content as string) ?? "")} bind:height={contentHeight} />
-    {:else}
-      <NumberContent number={content as number | null} bind:height={contentHeight} />
-    {/if}
-  {:else if isImage(content)}
-    <ImageContent image={content} bind:height={contentHeight} />
-  {:else}
-    <TextContent text={content} bind:height={contentHeight} clamped={clamped} parentHeight={height} />
   {/if}
 
   {#if clamped}

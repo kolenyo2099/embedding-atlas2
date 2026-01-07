@@ -241,6 +241,17 @@ export class TableController {
     }
   }
 
+  public commitCellEdit(row: string, col: string, value: unknown) {
+    if (!this.model) {
+      return;
+    }
+    this.model.updateCellValue(row, col, value);
+    if (this.config.onCellEdit) {
+      this.config.onCellEdit(row, col, value);
+    }
+    this.updateKey += 1;
+  }
+
   public cellIsVisible(cell: Cell): boolean {
     const { x, y } = this.model.getPosition(cell);
     const { width, height } = this.model.getDimensions(cell);

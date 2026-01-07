@@ -4,4 +4,5 @@ export interface TableSpec {
   type: "table";
   title: string;
   columns: string[];
+  editableColumns?: string[];
 }

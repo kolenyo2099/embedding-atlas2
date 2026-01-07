@@ -48,11 +48,25 @@ export function isLink(value: any): boolean {
   return typeof value == "string" && (value.startsWith("http://") || value.startsWith("https://"));
 }
 
+export function isImageUrl(value: any): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  return /\.(png|jpg|jpeg|gif|webp|bmp|tiff)$/i.test(value);
+}
+
+export function isVideo(value: any): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  return /\.(mp4|webm|ogg|mov|m4v)$/i.test(value);
+}
+
 export function isImage(value: any): boolean {
   if (value == null) {
     return false;
   }
-  if (typeof value == "string" && value.startsWith("data:image/")) {
+  if (typeof value == "string" && (value.startsWith("data:image/") || isImageUrl(value))) {
     return true;
   }
   if (value.bytes && value.bytes instanceof Uint8Array) {

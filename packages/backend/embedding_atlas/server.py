@@ -5,15 +5,18 @@ import concurrent.futures
 import json
 import os
 import re
+import tempfile
 import uuid
 from functools import lru_cache
+from pathlib import Path
 from typing import Callable
 
 import duckdb
-from fastapi import FastAPI, Request, Response
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from yt_dlp import YoutubeDL
 
 from .data_source import DataSource
 from .utils import arrow_to_bytes, to_parquet_bytes
@@ -162,6 +165,37 @@ def make_server(
         return await asyncio.get_running_loop().run_in_executor(
             executor, lambda: handle_selection(data)
         )
+
+    @app.get("/data/video")
+    async def get_video(url: str, background_tasks: BackgroundTasks):
+        try:
+            temp_dir = Path(tempfile.mkdtemp(prefix="embedding-atlas-video-"))
+            output_template = str(temp_dir / "%(id)s.%(ext)s")
+            ydl_opts = {
+                "format": "mp4/best",
+                "outtmpl": output_template,
+                "quiet": True,
+                "no_warnings": True,
+            }
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                filename = ydl.prepare_filename(info)
+            path = Path(filename)
+            if not path.exists():
+                raise FileNotFoundError("download failed")
+
+            def cleanup() -> None:
+                try:
+                    for item in temp_dir.iterdir():
+                        item.unlink()
+                    temp_dir.rmdir()
+                except Exception:
+                    pass
+
+            background_tasks.add_task(cleanup)
+            return FileResponse(path, media_type="video/mp4", filename=path.name)
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # Static files for the frontend
     app.mount("/", StaticFiles(directory=static_path, html=True))

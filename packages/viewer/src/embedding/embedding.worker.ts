@@ -11,7 +11,7 @@ let { handler, register } = WorkerRPC.runtime();
 onmessage = handler;
 
 interface EmbeddingOptions {
-  type: "text" | "image";
+  type: "text" | "image" | "ijepa";
   model: string;
 }
 
@@ -68,12 +68,12 @@ register("embedding.new", async (options: EmbeddingOptions) => {
     });
     embeddings.set(instance, computer);
     return instance;
-  } else if (options.type == "image") {
+  } else if (options.type == "image" || options.type == "ijepa") {
     let extractor = await pipeline("image-feature-extraction", options.model, pipelineOptions);
     let computer = makeEmbeddingComputer(async (data) => {
       let imgs = data.map((x) => imageToDataUrl(x) ?? "");
       imgs = await Promise.all(imgs.map((x) => load_image(x)));
-      let embedding = await extractor(imgs);
+      let embedding = await extractor(imgs, { pooling: options.type == "ijepa" ? "mean" : undefined });
       if (embedding.dims.length == 3) {
         embedding = embedding.mean(1);
       }

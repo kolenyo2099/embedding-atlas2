@@ -3,10 +3,11 @@
   interface Props {
     extensions?: string[];
     multiple?: boolean;
+    allowDirectories?: boolean;
     onUpload: (files: File[]) => void;
   }
 
-  let { extensions, multiple = false, onUpload }: Props = $props();
+  let { extensions, multiple = false, allowDirectories = false, onUpload }: Props = $props();
 
   let isDragging = $state(false);
   let fileInput: HTMLInputElement;
@@ -68,7 +69,9 @@
     <p class="text-slate-500 dark:text-slate-500">
       {isDragging ? "Drop your files here" : "Drag & drop files here or click to select"}
     </p>
-    <p class="text-sm text-slate-400 dark:text-slate-600">Accepted file types: JSON, CSV, Parquet</p>
+    <p class="text-sm text-slate-400 dark:text-slate-600">
+      Accepted file types: JSON, CSV, Parquet{allowDirectories ? ", or folders" : ""}
+    </p>
   </div>
   <input
     bind:this={fileInput}
@@ -76,6 +79,8 @@
     class="hidden"
     accept={extensions?.join(",")}
     multiple={multiple}
+    webkitdirectory={allowDirectories ? true : undefined}
+    directory={allowDirectories ? true : undefined}
     onchange={handleFileSelect}
   />
 </button>

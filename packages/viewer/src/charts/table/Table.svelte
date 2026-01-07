@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { CustomCell } from "@embedding-atlas/table";
   import { Table } from "@embedding-atlas/table/svelte";
+  import * as SQL from "@uwdata/mosaic-sql";
 
   import { getRenderer, type ColumnStyle } from "../../renderers/index.js";
   import type { ColumnDesc } from "../../utils/database.js";
@@ -16,6 +17,7 @@
 
   let { colorScheme, columnStyles } = context;
   let highlightStore = isolatedWritable(context.highlight);
+  let selectedRowsStore = isolatedWritable(context.selectedRows);
 
   let scrollTo = $state<RowID | null>(null);
 
@@ -47,6 +49,10 @@
   let resolvedCustomCellRenderers = $derived(
     resolveCustomCellRenderers(context.columns, $columnStyles, context.tableCellRenderers),
   );
+
+  let editableColumns = $derived(
+    spec.editableColumns ?? spec.columns.filter((column) => column !== context.id),
+  );
 </script>
 
 <Table
@@ -58,10 +64,19 @@
   scrollTo={scrollTo}
   onRowClick={async (identifier) => {
     highlightStore.set(identifier);
+    selectedRowsStore.set([identifier]);
   }}
   numLines={3}
   colorScheme={$colorScheme}
   theme={tableTheme}
   highlightHoveredRow={true}
   customCells={resolvedCustomCellRenderers}
+  editableColumns={editableColumns}
+  onCellEdit={async (rowId, column, value) => {
+    await context.coordinator.exec(`
+      UPDATE ${context.table}
+      SET ${SQL.column(column)} = ${SQL.literal(value)}
+      WHERE ${SQL.column(context.id)} = ${SQL.literal(rowId)}
+    `);
+  }}
 />

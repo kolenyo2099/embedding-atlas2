@@ -155,6 +155,19 @@ export class TableModel {
     return null;
   }
 
+  updateCellValue(row: string, col: string, value: unknown) {
+    if (!this.data[row]) {
+      return;
+    }
+    this.data = {
+      ...this.data,
+      [row]: {
+        ...this.data[row],
+        [col]: value,
+      },
+    };
+  }
+
   getPosition({ row, col }: Cell): { x: number; y: number } {
     const x = this.colPositions[col];
     const y = this.rowPositions[row];
