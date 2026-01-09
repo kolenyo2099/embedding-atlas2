@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2025 Apple Inc. Licensed under MIT License. -->
 <script lang="ts">
   import { imageToDataUrl } from "../utils/image.js";
-  import { isImage, isLink, stringify, textRendererClasses } from "./index.js";
+  import { isImage, isLink, isVideo, stringify, textRendererClasses } from "./index.js";
 
   interface Props {
     value?: string;
@@ -29,6 +29,8 @@
 {#if rendererClass == null}
   {#if isLink(value)}
     <a href={value} class="underline" target="_blank">{value}</a>
+  {:else if isVideo(value)}
+    <video src={value} controls class="max-w-48 max-h-24"></video>
   {:else if isImage(value)}
     <img src={imageToDataUrl(value)} alt="" referrerpolicy="no-referrer" class="max-w-24 max-h-24" />
   {:else}

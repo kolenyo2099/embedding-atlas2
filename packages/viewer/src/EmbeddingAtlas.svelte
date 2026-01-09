@@ -10,7 +10,10 @@
   import LayoutView from "./layouts/LayoutView.svelte";
   import ColumnStylePicker from "./views/ColumnStylePicker.svelte";
   import FilteredCount from "./views/FilteredCount.svelte";
+  import PointDetailsModal from "./views/PointDetailsModal.svelte";
   import SearchResultList from "./views/SearchResultList.svelte";
+  import QualitativePanel from "./views/QualitativePanel.svelte";
+  import SelectionToolbar from "./views/SelectionToolbar.svelte";
   import ActionButton from "./widgets/ActionButton.svelte";
   import Button from "./widgets/Button.svelte";
   import Input from "./widgets/Input.svelte";
@@ -40,6 +43,7 @@
   import { makeColorSchemeStore } from "./utils/color_scheme.js";
   import { columnDescriptions, predicateToString, type ColumnDesc } from "./utils/database.js";
   import { latestAsync } from "./utils/latest_async.js";
+  import { createQualitativeStore } from "./qualitative/store.js";
 
   const searchLimit = 500;
 
@@ -244,7 +248,7 @@
   });
 
   onMount(async () => {
-    columns = (await columnDescriptions(coordinator, data.table)).filter((x) => !x.name.startsWith("__"));
+    await refreshColumns();
     chartContext.columns = columns;
 
     if (initialState) {
@@ -285,6 +289,7 @@
     chartThemeStore.set(chartTheme ?? undefined);
   });
 
+  let selectedRowsStore = writable<RowID[] | null>(null);
   let chartContext: ChartContext = {
     coordinator: coordinator,
     filter: crossFilter,
@@ -300,10 +305,34 @@
     search: doSearch,
     searchResult: searchResultStore,
     highlight: writable(null),
+    selectedRows: selectedRowsStore,
     embeddingViewConfig: embeddingViewConfig,
     embeddingViewLabels: embeddingViewLabels,
     tableCellRenderers: tableCellRenderers,
   };
+
+  const qualitativeStore = createQualitativeStore();
+  let showQualitativePanel = $state(true);
+  let showDetails = $state(false);
+  let highlightStore = chartContext.highlight;
+
+  async function refreshColumns() {
+    columns = (await columnDescriptions(coordinator, data.table)).filter((x) => !x.name.startsWith("__"));
+  }
+
+  function addQuickMemo(rows: RowID[]) {
+    let content = window.prompt("Add memo");
+    if (content && content.trim()) {
+      qualitativeStore.createMemo({
+        content: content.trim(),
+        linkedCodes: [],
+        linkedDataPoints: rows,
+        memoType: "observational",
+        tags: [],
+      });
+      showQualitativePanel = true;
+    }
+  }
 
   let charts = $state.raw<Record<string, any>>({});
   let chartStates = $state.raw<Record<string, any>>({});
@@ -416,6 +445,11 @@
                 </div>
               </PopupButton>
             {/if}
+            <Button
+              label={showQualitativePanel ? "Hide Coding" : "Show Coding"}
+              onClick={() => (showQualitativePanel = !showQualitativePanel)}
+            />
+            <Button label="Details" onClick={() => (showDetails = true)} />
           </div>
         </div>
 
@@ -501,6 +535,27 @@
         />
       {/if}
     </div>
+    <SelectionToolbar
+      selectedRows={selectedRowsStore}
+      codes={qualitativeStore.codes}
+      onApply={(codeId, rows) => qualitativeStore.applyCode(codeId, rows)}
+      onAddMemo={addQuickMemo}
+    />
+    {#if showQualitativePanel}
+      <QualitativePanel
+        context={chartContext}
+        selectedRows={selectedRowsStore}
+        store={qualitativeStore}
+        onShowDetails={() => (showDetails = true)}
+        onRefreshColumns={refreshColumns}
+      />
+    {/if}
+    <PointDetailsModal
+      context={chartContext}
+      open={showDetails}
+      rowId={$highlightStore}
+      onClose={() => (showDetails = false)}
+    />
   </div>
 </div>
 <svelte:window onkeydown={onWindowKeydown} />

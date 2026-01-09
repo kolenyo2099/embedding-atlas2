@@ -24,14 +24,6 @@ pushd packages/embedding-atlas
 npm run package
 popd
 
-pushd packages/examples
-npm run build
-popd
-
 pushd packages/backend
 ./build.sh
-popd
-
-pushd packages/docs
-npm run build
 popd

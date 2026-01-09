@@ -83,7 +83,7 @@ export async function computeEmbedding(options: {
   dataColumn: string;
   xColumn: string;
   yColumn: string;
-  type: "text" | "image";
+  type: "text" | "image" | "ijepa";
   model: string;
   callback?: (message: string, progress?: number) => void;
 }) {

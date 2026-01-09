@@ -78,6 +78,7 @@
   let theme = $derived(resolveChartTheme($colorScheme, $themeConfig));
 
   let highlightStore = isolatedWritable(context.highlight);
+  let selectedRowsStore = isolatedWritable(context.selectedRows);
 
   let categoryColumn = $derived(spec.data.category);
 
@@ -253,6 +254,11 @@
       selection = points;
       if (points != null && points.length == 1) {
         highlightStore.set(points[0].identifier);
+      }
+      if (points != null) {
+        selectedRowsStore.set(points.map((point) => point.identifier));
+      } else {
+        selectedRowsStore.set(null);
       }
     }}
   />

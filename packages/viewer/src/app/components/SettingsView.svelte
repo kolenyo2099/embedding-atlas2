@@ -26,6 +26,7 @@
     "Xenova/dino-vits8",
     "Xenova/dino-vitb16",
     "Xenova/dino-vits16",
+    "Xenova/ijepa-vit-h-14",
   ];
 
   export interface Settings {
@@ -35,7 +36,7 @@
       | {
           precomputed: { x: string; y: string; neighbors?: string };
         }
-      | { compute: { column: string; type: "text" | "image"; model: string } };
+      | { compute: { column: string; type: "text" | "image" | "ijepa"; model: string } };
   }
 
   interface Props {
@@ -45,7 +46,7 @@
 
   let { columns, onConfirm }: Props = $props();
 
-  let embeddingMode = $state<"precomputed" | "from-text" | "from-image" | "none">("precomputed");
+  let embeddingMode = $state<"precomputed" | "from-text" | "from-image" | "from-ijepa" | "none">("precomputed");
 
   let textColumn: string | undefined = $state(undefined);
 
@@ -92,6 +93,13 @@
       }
       value.embedding = { compute: { column: embeddingImageColumn, type: "image", model: model } };
     }
+    if (embeddingMode == "from-ijepa" && embeddingImageColumn != undefined) {
+      let model = embeddingImageModel?.trim() ?? "";
+      if (model == undefined || model == "") {
+        model = imageModels[imageModels.length - 1];
+      }
+      value.embedding = { compute: { column: embeddingImageColumn, type: "ijepa", model: model } };
+    }
     onConfirm?.(value);
   }
 </script>
@@ -134,6 +142,7 @@
           { value: "precomputed", label: "Pre-computed" },
           { value: "from-text", label: "From Text" },
           { value: "from-image", label: "From Image" },
+          { value: "from-ijepa", label: "From I-JEPA" },
           { value: "none", label: "None" },
         ]}
       />
@@ -207,7 +216,7 @@
         Computing the embedding and 2D projection in browser may take a while. The model will be loaded with
         Transformers.js.
       </p>
-    {:else if embeddingMode == "from-image"}
+    {:else if embeddingMode == "from-image" || embeddingMode == "from-ijepa"}
       <div class="w-full flex flex-row items-center">
         <div class="w-[6rem] dark:text-slate-400">Image</div>
         <Select

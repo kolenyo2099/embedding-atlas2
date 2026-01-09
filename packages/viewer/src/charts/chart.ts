@@ -89,6 +89,9 @@ export interface ChartContext {
   /** The current highlight point. When this changes, supported views will highlight the given point. */
   highlight: Writable<RowID | null>;
 
+  /** The current selected rows for bulk actions. */
+  selectedRows: Writable<RowID[] | null>;
+
   /** Configuration for the embedding view. See docs for the EmbeddingView. */
   embeddingViewConfig?: EmbeddingViewConfig | null;
 

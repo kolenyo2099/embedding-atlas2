@@ -30,11 +30,6 @@ Embedding Atlas is a tool that provides interactive visualizations for large emb
 
 Please visit <https://apple.github.io/embedding-atlas> for a demo and documentation.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./packages/docs/assets/embedding-atlas-dark.png">
-  <img alt="screenshot of Embedding Atlas" src="./packages/docs/assets/embedding-atlas-light.png">
-</picture>
-
 ## Get started
 
 To use Embedding Atlas with Python:
@@ -125,8 +120,6 @@ Python:
 - `packages/backend`: A Python package named `embedding-atlas` that provides the `embedding-atlas` command line tool.
 
 Documentation:
-
-- `packages/docs`: The documentation website.
 
 For more information, please visit <https://apple.github.io/embedding-atlas/develop.html>.
 
